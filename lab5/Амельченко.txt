@@ -1,0 +1,125 @@
+КИЇВ - 2023
+Національний технічний університет України
+«Київський політехнічний інститут ім. Ігоря Сікорського»
+Кафедра цифрових технологій в енергетиці
+ЗВІТ
+про виконання лабораторної роботи №5
+з дисципліни «Вступ до інтелектуального аналізу даних»
+«Логістична регресія»
+Варіант №2
+Виконав: студент групи ТМ-02
+Амельченко А.В.
+Перевірив: доцент, к.ф.-м.н.
+Городецький М.В.
+__________________________Завдання
+1. Проаналізувати дані, що відповідають вашому варіанту, і визначити мету класифікації та ознаку, яка
+містить мітку класу.
+2. Імпортувати дані, що відповідають вашому варіанту, до системи R.
+3. Розбити набір даних на навчальний та тестовий.
+4. Провести класифікацію за допомогою логістичної регресії.
+5. Оцінити та порівняти точність.
+6. Побудувати ROC-криву та обчислити показник AUC.
+7. Зробити висновки та написати звіт.
+Виконання роботи
+1) Проаналізувати дані, що відповідають вашому варіанту, і визначити мету
+класифікації та ознаку, яка містить мітку класу.
+Завдання за варіантом – Haberman’s Survival.
+http://archive.ics.uci.edu/dataset/43/haberman+s+survival
+Набір даних складається з чотирьох атрибутів та описує пацієнтів з
+онкологічним захворюванням. Перший атрибут – вік пацієнта на момент
+операції, другий – рік проведення операції, третій – кількість метастаз ,
+четвертий – прогноз щодо пацієнта на наступні п’ять років (1 – позитивний, 2
+– негативний). Власне останній атрибут є ознакою з міткою класу.
+Мета класифікації – прогноз стану пацієнта, котрий базується на його віці,
+даті проведення операції та кількості метастаз.
+2) Імпортувати дані, що відповідають вашому варіанту, до системи R
+Код:
+filename <- "~/data/haberman.data"
+dataset <- read.csv(filename, header=FALSE)
+colnames(dataset) <- c("Age","Year","Nodes","Status")
+head(dataset)
+Окрім імпорту даних, ми також змінили назви атрибутів відповідно до їх опису.
+Результат:
+3) Розбити набір даних на навчальний та тестовий
+Для розбиття набору даних на навчальний та тестовий було використано
+функцію Sample(). Найкращі результати були отримані при розподілі 70% на
+навчальні дані та 30% на тестові. Також окрім розбиття даних, в цьому блоці
+кода ми привели значення категоріальної ознаки до бінарного вигляду. Цепотрібно для коректного обчислення логістичної регресії, інакше виникала
+помилка.
+Код:
+set.seed(91)
+dataset$Status <- ifelse(dataset$Status == 2, 0, 1)
+ran <- sample(1:nrow(dataset), 0.7 * nrow(dataset))
+traindata <- dataset[ran, ]
+testdata <- dataset[-ran, ]
+prop.table(table(traindata$Status))
+prop.table(table(testdata$Status))
+Розподіл класів у створених наборах:
+Розподіл вийшов доволі рівномірним.
+4-6)
+Провести класифікацію за допомогою логістичної регресії
+Спочатку ми побудували модель логістичної регресії та вивели її
+коефіцієнти:
+model_glm = glm(Status ~., data = traindata, family =
+"binomial")
+coef(model_glm)
+head(predict(model_glm, type = "link"))
+head(predict(model_glm, type = "response"))
+Далі ми порівняли передбачувані значення з фактичними, на основі цього
+створили матрицю помилок та вивели показники оцінки моделі – точність,
+чутливість та специфічність:
+model_glm_pred = ifelse(predict(model_glm, type = "link") >
+0, 1, 0)train_tab = table(predicted = model_glm_pred, actual =
+traindata$Status)
+library(caret)
+train_con_mat = confusionMatrix(train_tab)
+c(train_con_mat$overall["Accuracy"],
+train_con_mat$byClass["Sensitivity"],
+train_con_mat$byClass["Specificity"])
+Результат:
+Отже, отримана точність складає 78%.
+Побудова ROC-кривої та обчислення показнику AUX:
+library(pROC)
+Код:
+test_prob = predict(model_glm, newdata = testdata, type =
+"response")
+test_roc = roc(testdata$Status ~ test_prob, plot = TRUE,
+print.auc = TRUE)
+Результат:AUC – 0.73. Даний показник вимірює площу під ROC-кривою, характеризує
+здатність моделі розрізняти класи. Наше отримане значення говорить про те,
+що побудована модель таку здатність має.
+7) Зробити висновки
+Під час виконання лабораторної роботи було розбито набір даних на
+навчальний та тестовий. За допомогою логістичної регресії було проведено
+класифікацію, а також ми побудували ROC-криву та обчислили показник AUC.
+Пояснили отримані результати.
+Лістинг
+filename <- "~/data/haberman.data"
+dataset <- read.csv(filename, header=FALSE)
+head(dataset)
+colnames(dataset) <- c("Age","Year","Nodes","Status")
+set.seed(91)
+dataset$Status <- ifelse(dataset$Status == 2, 0, 1)
+ran <- sample(1:nrow(dataset), 0.7 * nrow(dataset))
+traindata <- dataset[ran, ]
+testdata <- dataset[-ran, ]
+prop.table(table(traindata$Status))
+prop.table(table(testdata$Status))
+model_glm = glm(Status ~., data = traindata, family = "binomial")
+coef(model_glm)
+head(predict(model_glm, type = "link"))
+head(predict(model_glm, type = "response"))
+model_glm_pred = ifelse(predict(model_glm, type = "link") > 0, 1,
+0)
+train_tab = table(predicted = model_glm_pred, actual =
+traindata$Status)
+library(caret)
+train_con_mat = confusionMatrix(train_tab)
+c(train_con_mat$overall["Accuracy"],
+train_con_mat$byClass["Sensitivity"],
+train_con_mat$byClass["Specificity"])
+library(pROC)
+test_prob = predict(model_glm, newdata = testdata, type =
+"response")
+test_roc = roc(testdata$Status ~ test_prob, plot = TRUE, print.auc
+= TRUE)

@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Visual Studio
+.vs/
+
+# Word documents (archived in lab folders)
+*.docx
+*.DOCX

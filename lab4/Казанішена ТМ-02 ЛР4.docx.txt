@@ -1,0 +1,79 @@
+Міністерство освіти і науки УкраїниНаціональний технічний університет України«Київський політехнічний інститут ім. І. Сікорського»Кафедра цифрових технологій в енергетиці ІАТЕЛабораторна робота №4із дисципліни: «Вступ до інтелектуального аналізу даних»Варіант №11 (1)Виконала:студентка 3-го курсу, НН ІАТЕгрупи ТМ-02Казанішена І.В.Київ – 2023
+Хід виконання роботи1. Дані, що відповідають варіанту.2. Проаналізувати дані, що відповідають вашому варіанту, і визначити мету класифікації та ознаку, яка містить мітку класу.Інформація про набір данихЕкспериментальний стенд для оцінки заповнюваності був розгорнутий у кімнаті розміром 6 м × 4,6 м. Налаштування складалося з 7 сенсорних вузлів і одного крайового вузла в конфігурації зірки з сенсорними вузлами, які передають дані на край кожні 30 секунд за допомогою бездротових приймачів. Жодна система HVAC не використовувалася під час збору набору даних. У цьому експерименті використовувалися п’ять різних типів неінтрузивних датчиків: датчики температури, світла, звуку, CO2 і цифрові пасивні інфрачервоні (PIR). Датчики CO2, звуку та PIR потребували ручного калібрування. Для датчика CO2 калібрування за нульовою точкою було виконано вручну перед його першим використанням, витримуючи його в чистому середовищі протягом понад 20 хвилин, а потім потягнувши калібрувальний штифт (штифт HD) протягом 7 с. Датчик звуку, по суті, є мікрофоном із підключеним до нього аналоговим підсилювачем зі змінним коефіцієнтом посилення. Таким чином, вихід цього датчика є аналоговим, який зчитується мікроконтролером АЦП у вольтах. Потенціометр, пов'язаний з посиленням підсилювача, був налаштований для забезпечення найвищої чутливості. Датчик PIR має два регулятори: один для налаштування чутливості, а інший для налаштування часу, протягом якого вихідний сигнал залишається високим після виявлення руху. Обидва вони були скориговані до найвищих значень. Сенсорні вузли S1-S4 складалися з датчиків температури, світла та звуку, S5 мав датчик CO2, а S6 і S7 мали по одному датчику PIR, які були розгорнуті на виступах стелі під кутом, який максимізував поле зору датчика для руху виявлення.Інформація про атрибути:Date: YYYY/MM/DD 
+Time: HH:MM:SS 
+Temperature: In degree Celsius 
+Light: In Lux 
+Sound: In Volts (amplifier output read by ADC) 
+CO2: In PPM 
+CO2 Slope: Slope of CO2 values taken in a sliding window 
+PIR: Binary value conveying motion detection 
+Room_Occupancy_Count: Ground TruthМета класифікації в цьому наборі даних полягає у визначенні присутності людей в кімнаті, тобто відображенні наявності людей в якості мітки класу. Таким чином, мітка класу - це ознака Room_Occupancy_Count.3. Розбити набір даних на навчальний та тестовий:
+4. Провести класифікацію за допомогою машин опорних векторів, використовуючи бібліотеки caret, e1071 та kernlab.
+
+
+
+		
+Висновок: Під час виконання цього завдання ми успішно класифікували набір даних "Room Occupancy Estimation" за допомогою машин опорних векторів, використовуючи бібліотеки caret, e1071 та kernlab.  Для нашого набору  ми досягли максимальної точності на рівні 99.6%. Цей метод може бути корисним для класифікації великих наборів даних з багатьма ознаками та варіантами класів. Отже, класифікація за допомогою машин опорних векторів є ефективним методом для розв'язання задач класифікації, особливо коли маємо велику кількість ознак та об'єм даних. При цьому, вибір конкретної бібліотеки залежить від характеристик даних та потреб користувача.Лістинг програмиlibrary(class)
+library(caret)
+
+# Завантаження даних
+url <- "http://archive.ics.uci.edu/ml/machine-learning-databases/00640/Occupancy_Estimation.csv"
+data <- read.csv(url)
+# Видаляємо непотрібні колонки
+data <- data[, 3:ncol(data)]
+
+data$Room_Occupancy_Count <- as.factor(data$Room_Occupancy_Count)
+
+dependent_var <- "Room_Occupancy_Count"
+independent_vars <- setdiff(colnames(data), dependent_var)
+
+set.seed(123)  # Для відтворюваності результатів
+train_indices <- createDataPartition(data$Room_Occupancy_Count, p = 0.6, list = FALSE)
+train_data <- data[train_indices, ]
+test_data <- data[-train_indices, ]
+
+
+## 3. Провести класифікацію за допомогою машин опорних векторів, використовуючи бібліотеки caret, e1071 та kernlab
+## caret
+control <- trainControl(method = "cv", number = 10)
+metric <- "Accuracy"
+
+fit.svm <- train(Room_Occupancy_Count~., data = train_data, method = "svmLinear", metric = metric, trControl = control)
+caret_predict <- predict(fit.svm, train_data)
+confusion_matrix <- table(caret_predict, train_data$Room_Occupancy_Count)
+print(confusion_matrix)
+accuracy1 <- sum(diag(confusion_matrix))/sum(confusion_matrix)
+print(paste("accuracy of caret svm =",accuracy1*100,"%"))
+
+
+############################################################
+## e1071
+library("e1071")
+svm_model <- svm(as.factor(Room_Occupancy_Count) ~ ., data=train_data,
+                 kernel="polynomial")
+pred = predict(svm_model, test_data)
+tab = table(Predicted=pred, Actual = test_data$Room_Occupancy_Count)
+print(tab)
+accuracy2 <- sum(diag(tab))/sum(tab)
+print(paste("accuracy of e1071 svm =",accuracy2*100,"%"))
+
+############################################################
+# kernlab
+
+library(kernlab)
+classifier <- ksvm(as.factor(Room_Occupancy_Count)~ ., data = train_data, 
+                   kernel = "vanilladot")
+predictions <- predict(classifier, test_data)
+cm <- table(predictions, test_data$Room_Occupancy_Count)
+print(cm)
+accuracy3 <- sum(diag(cm))/sum(cm)
+print(paste("accuracy of ksvm with vanilla kernel =",accuracy3*100,"%"))
+
+
+classifier <- ksvm(as.factor(Room_Occupancy_Count)~ ., data = train_data, 
+                   kernel = "rbfdot")
+predictions <- predict(classifier, test_data)
+cm <- table(predictions, test_data$Room_Occupancy_Count)
+print(cm)
+accuracy4 <- sum(diag(cm))/sum(cm)
+print(paste("accuracy of ksvm with rbf kernel =",accuracy4*100,"%"))

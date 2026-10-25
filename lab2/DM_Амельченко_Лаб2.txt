@@ -1,0 +1,139 @@
+Завдання
+1. Імпортувати дані, що відповідають вашому варіанту, до системи R.
+2. Проаналізувати дані, що відповідають вашому варіанту, і визначити мету
+класифікації та ознаку, яка містить мітку класу.
+3. Розбити набір даних на навчальний та тестовий.
+4. Провести класифікацію методом k найближчих сусідів.
+5. Оцінити точність.
+6. Зробити висновки та написати звіт.
+Завдання за варіантом – Glass identification.
+http://archive.ics.uci.edu/ml/datasets/Glass+Identification
+Інформація про атрибути даних:
+Виконання роботи
+Імпортуємо дані до системи, змінюємо назви стовпчиків та перевіряємо
+правильність імпортування:
+library(RCurl)
+urlfile <-'http://archive.ics.uci.edu/ml/machine-learningdatabases/glass/glass.data'
+downloaded <- getURL(urlfile, ssl.verifypeer=FALSE)
+connection <- textConnection(downloaded)
+dataset <- read.csv(connection, header=FALSE)
+colnames(dataset) <- c("id", "RI", "Na", "Mg", "AI", "Si", "K",
+"Ca","Ba","Fe","Type of glass")
+head(dataset, 15)Мета класифікації – визначення типу скла за його хімічними властивостями.
+Ознакою, що містить мітку класу, є type of glass, тобто тип скла. В таблиці
+ця ознака виражена певним номером, котрому відповідає характеристика скла.
+Далі потрібно розбити наш набір даних на навчальний та тестовий. Зробимо це
+двома способами – через функцію sample(1) та функцію
+createDataPartition(2).
+1) Через функцію sample() генеруємо випадковим чином числа для
+вибірки, 90% даних будуть йти в навчальну вибірку, решта підуть в
+тестову. Функція set.seed() дозволяє відтворювати однакові
+послідовності після кожного запуску коду. Переглянемо розподіл класів в
+оригінальному наборі даних та в щойно сгенерованих:
+set.seed(111)
+ran <- sample(1:nrow(dataset), 0.9 * nrow(dataset))
+table(dataset$`Type of glass`)
+table(dataset$`Type of glass`[ran])
+table(dataset$`Type of glass`[-ran])
+Проведемо нормалізацію задля забезпечення рівного впливу усіх числових
+характеристик на результат:
+nor <-function(x) { (x -min(x))/(max(x)-min(x)) }dataset_norm <-
+as.data.frame(lapply(dataset[,c(1,2,3,4,5,6,7,8,9,10)], nor))
+summary(dataset_norm)
+Тепер усі значення не більше 1.
+Створюємо навчальний та тестовий набори даних, до окремих змінних
+записуємо мітки класів:
+dataset_train <- dataset_norm[ran,]
+dataset_test <- dataset_norm[-ran,]
+dataset_target_category <- dataset[ran,11]
+dataset_test_category <- dataset[-ran,11]
+Навчальний та тестовий набори створені.
+2) Для розбиття на навчальний та тестовий набори даних функцією
+createDataPartition() спочатку потрібно встановити пакет caret.
+В саму функцію ми передаємо ознаку з міткою класу та відсоток даних,
+котрий ми будемо передавати до навчального набору. Далі ми створюємо
+набір даних без ознаки з міткою класу і стандартизуємо його за
+допомогою функції Scale().
+index <- createDataPartition(dataset$`Type of glass`, p = 0.7,list
+= FALSE)
+dataset_ <- subset(dataset, select = c(-`Type of glass`))
+dataset_1 <- scale(dataset_)
+head(dataset_1)
+Створюємо навчальний та тестовий набори даних, перевіряємо їх, а також
+створюємо змінні з мітками класів:
+traindata <- dataset_1[index,]
+testdata <- dataset_1[-index,]table(dataset$`Type of glass`[index])
+table(dataset$`Type of glass`[-index])
+Ytrain <- dataset$`Type of glass`[index]
+Ytest <- dataset$`Type of glass`[-index]
+Можна звернути увагу на те, що розподіл даних рівномірний, тобто з кожного
+класу взято приблизно по 70% даних.
+Далі за завданням нам потрібно провести класифікацію методом k найближчих
+сусідів. Якщо для розбиття даних ми використовували sample(), то
+класифікація матиме такий вигляд:
+pr <-
+knn(dataset_train,dataset_test,cl=dataset_target_category,k=13)
+Застосовуємо метод, за k взяли 13. Будуємо матрицю помилок:
+tab <- table(pr,dataset_test_category)
+tab
+Бачимо, що було допущено певну кількість помилок. Оцінимо точність:
+accuracy <- function(x){sum(diag(x)/(sum(rowSums(x)))) * 100}
+accuracy(tab)
+Отримали досить високу точність.
+Якщо для створення наборів ми використовували createDataPartition(), то
+класифікацію проведемо наступним чином:
+round(sqrt(nrow(traindata)),0)-1
+knnmodel <- knn(traindata, testdata,
+k=round(sqrt(nrow(traindata)),0)-1, cl=Ytrain)
+summary(knnmodel)
+В даному випадку k у нас дорівнює корню квадратному з навчальної вибірки і
+мінус один, що дорівнює 11. І далі за допомогою функції knn() ми провеликласифікацію. Оцінимо результат використавши матрицю помилок та функцію
+confusionMatrix():
+Робимо висновок, що саме в нашому наборі даних більш точний результат дав
+перший спосіб, тобто з використанням фукнції sample().
+Лістинг
+library(RCurl)
+urlfile <-'http://archive.ics.uci.edu/ml/machine-learningdatabases/glass/glass.data'
+downloaded <- getURL(urlfile, ssl.verifypeer=FALSE)
+connection <- textConnection(downloaded)
+dataset <- read.csv(connection, header=FALSE)
+colnames(dataset) <- c("id", "RI", "Na", "Mg", "AI", "Si", "K",
+"Ca","Ba","Fe","Type of glass")
+head(dataset, 15)
+set.seed(111)
+ran <- sample(1:nrow(dataset), 0.9 * nrow(dataset))table(dataset$`Type of glass`)
+table(dataset$`Type of glass`[ran])
+table(dataset$`Type of glass`[-ran])
+nor <-function(x) { (x -min(x))/(max(x)-min(x)) }
+dataset_norm <-
+as.data.frame(lapply(dataset[,c(1,2,3,4,5,6,7,8,9,10)], nor))
+summary(dataset_norm)
+dataset_train <- dataset_norm[ran,]
+dataset_test <- dataset_norm[-ran,]
+dataset_target_category <- dataset[ran,11]
+dataset_test_category <- dataset[-ran,11]
+library(class)
+pr <-
+knn(dataset_train,dataset_test,cl=dataset_target_category,k=13)
+tab <- table(pr,dataset_test_category)
+tab
+accuracy <- function(x){sum(diag(x)/(sum(rowSums(x)))) * 100}
+accuracy(tab)
+library(caret)
+index <- createDataPartition(dataset$`Type of glass`, p = 0.7,list
+= FALSE)
+dataset_ <- subset(dataset, select = c(-`Type of glass`))
+dataset_1 <- scale(dataset_)
+head(dataset_1)
+traindata <- dataset_1[index,]
+testdata <- dataset_1[-index,]
+table(dataset$`Type of glass`[index])
+table(dataset$`Type of glass`[-index])
+Ytrain <- dataset$`Type of glass`[index]
+Ytest <- dataset$`Type of glass`[-index]
+round(sqrt(nrow(traindata)),0)-1
+knnmodel <- knn(traindata, testdata,
+k=round(sqrt(nrow(traindata)),0)-1, cl=Ytrain)
+summary(knnmodel)
+cMatrix <- table(knnmodel, Ytest) ;cMatrix
+confusionMatrix(cMatrix

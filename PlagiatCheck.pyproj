@@ -1,0 +1,81 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{58f2297f-17c1-49a4-8661-76ede1e73631}</ProjectGuid>
+    <ProjectHome />
+    <StartupFile>convert.py</StartupFile>
+    <SearchPath />
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <InterpreterId>MSBuild|venv|$(MSBuildProjectFullPath)</InterpreterId>
+    <IsWindowsApplication>False</IsWindowsApplication>
+    <CommandLineArguments>lab2</CommandLineArguments>
+    <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
+  <PropertyGroup>
+    <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="check.py" />
+    <Compile Include="convert.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="lab1\lab1 Вадим Баворовський.docx.txt" />
+    <Content Include="lab1\аналізданих_ЛР1_ТМ-01_Тіщенко_1.docx.txt" />
+    <Content Include="lab1\аналізданих_ЛР1_ТМ-01_Тіщенко_2.docx.txt" />
+    <Content Include="lab1\Борейчук. ТМ-01. ЛР1.docx.txt" />
+    <Content Include="lab1\Лімарєв ТМ-02 ЛР1.docx.txt" />
+    <Content Include="lab1\Лаб1 Підгерський ТМ-02.docx.txt" />
+    <Content Include="lab1\Лазоренко ЛР1.docx.txt" />
+    <Content Include="lab1\Чиж ТМ-01 ЛР1 іад.docx.txt" />
+    <Content Include="lab1\Яковенко ТМ-02 ЛР1.docx.txt" />
+    <Content Include="lab2\Data Analisys Lab2 Кондрашін ТМ-02.docx.txt" />
+    <Content Include="lab2\Lab 2, Тиліщак М.Д., ТМ-01.docx.txt" />
+    <Content Include="lab2\lab2_Вадим Баворовський.R.txt" />
+    <Content Include="lab2\Rка_ЛР2.docx.txt" />
+    <Content Include="lab2\Гурин_ЛР2_ТМ-02.docx.txt" />
+    <Content Include="lab2\Доброштан В.В. RLaba2.docx.txt" />
+    <Content Include="lab2\Зелінський Віталій ТМ-02 лаб2.docx.txt" />
+    <Content Include="lab2\Л2_Сухенко_ТМ-02.docx.txt" />
+    <Content Include="lab2\Лімарєв ТМ-02 ЛР2 OLD.docx.txt" />
+    <Content Include="lab2\Лімарєв ТМ-02 ЛР2.docx.txt" />
+    <Content Include="lab2\Лімарєв ТМ-02 ЛР2_ver_2.docx.txt" />
+    <Content Include="lab2\Лаб2 Підгерський ТМ-02 %281%29.docx.txt" />
+    <Content Include="lab2\Лаб_2_Ключук_В_П_ТМ-01.docx.txt" />
+    <Content Include="lab2\Лабораторна_2_ТМ-02_Михановська_Єва.docx.txt" />
+    <Content Include="lab2\ЛР2 Волівач ТМ-02.docx.txt" />
+    <Content Include="lab2\ЛР2 Дубовик ТМ-02.docx.txt" />
+    <Content Include="lab2\Лр2 тм-02 Василенко ver_2.docx.txt" />
+    <Content Include="lab2\Лр2 тм-02 Василенко.docx.txt" />
+    <Content Include="lab2\ЛР2_Ждан_ТМ-02.docx.txt" />
+    <Content Include="lab2\Олександр Мороз - Лаб 2 %282%29.docx.txt" />
+    <Content Include="lab2\ТМ-01 ЛР 2 Загребельний Максим.docx.txt" />
+    <Content Include="lab2\Тм-01 Петров А.К .docx.txt" />
+    <Content Include="lab2\ТМ-02_Федусенко Федір_ЛР№2.docx.txt" />
+    <Content Include="lab2\Чиж ТМ-01 ЛР2 іад.docx.txt" />
+    <Content Include="lab2\Шевченко_ТМ-02_ЛР2.docx.txt" />
+    <Content Include="lab2\Яковенко ТМ-02 ЛР2.docx.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="lab1" />
+    <Folder Include="lab2" />
+  </ItemGroup>
+  <ItemGroup>
+    <Interpreter Include="venv\">
+      <Id>venv</Id>
+      <Description>venv (Python 3.11 (64-bit))</Description>
+      <InterpreterPath>Scripts\python.exe</InterpreterPath>
+      <WindowsInterpreterPath>Scripts\pythonw.exe</WindowsInterpreterPath>
+      <Version>3.11</Version>
+      <Architecture>X64</Architecture>
+      <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>
+    </Interpreter>
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
+</Project>

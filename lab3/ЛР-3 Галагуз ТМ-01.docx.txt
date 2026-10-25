@@ -1,0 +1,51 @@
+Міністерство освіти і науки УкраїниНаціональний технічний університет України«Київський політехнічний інститут ім. І. Сікорського»Кафедра цифрових технологій в енергетиці ІАТЕЛабораторна робота №3із дисципліни: «Вступ до інтелектуального аналізу даних»Варіант №5Виконав:студент 3-го курсу, НН ІАТЕгрупи ТМ-01Галагуз С.П.Київ – 2023ЗвітІмпортувати дані
+
+
+Проаналізувати дані, що відповідають вашому варіанту, і визначити мету класифікації та ознаку, яка містить мітку класу.
+
+Згідно з інформацією на сайті, яка додається до датасету, таблиця містить такі стовпці:
+
+name - ASCII subject name and recording number
+MDVP:Fo(Hz) - Average vocal fundamental frequency
+MDVP:Fhi(Hz) - Maximum vocal fundamental frequency
+MDVP:Flo(Hz) - Minimum vocal fundamental frequency
+MDVP:Jitter(%),MDVP:Jitter(Abs),MDVP:RAP,MDVP:PPQ,Jitter:DDP - Several measures of variation in fundamental frequency
+MDVP:Shimmer,MDVP:Shimmer(dB),Shimmer:APQ3,Shimmer:APQ5,MDVP:APQ,Shimmer:DDA - Several measures of variation in amplitude
+NHR,HNR - Two measures of ratio of noise to tonal components in the voice
+status - Health status of the subject (one) - Parkinson's, (zero) - healthy
+RPDE,D2 - Two nonlinear dynamical complexity measures
+DFA - Signal fractal scaling exponent
+spread1,spread2,PPE - Three nonlinear measures of fundamental frequency variation
+
+Міткою класу є стовпець “status”, який показує, чи є людина здоровою (0), чи хворою (1). Вона є цільовою ознакою, яку б ми хотіли дізнатися, проаналізувавши всі атрибути.
+Розбити набір даних на навчальний та тестовий.
+
+
+
+Виконавши даний фрагмент коду, ми поділили набір даних на навчальний та тестовий. Перший буде використовуватись для тренування моделі, тоді як тестовий – для перевірки точності.
+Провести класифікацію за допомогою дерева рішень, використовуючи бібліотеки rpart та C50 (Обгрунтувати отримані результати).
+
+Проводимо класифікацію за допомогою rpart, створюємо модель рішення:
+
+
+
+Отримання прогнозованих значень на основі моделі:
+
+
+
+Вирахування точності на основі тестових даних та обраховані вручну:
+
+
+Як бачимо, точність доволі висока, а результати збігаються.
+Проведення класифікації за допомогою C50, передбачення того що буде у нашому факторі та обрахування точності:
+
+
+
+
+
+Отримана точність – 0.92, що є високим показником і, навіть, вищим, ніж у попередньому варіанті.
+Висновок
+Для класифікації використовувалось дерево рішень з використанням бібліотек rpart та C50, і була розрахована точність, яка була високою, для бібліотек – 0.87 та 0.92 відповідно.
+Лістинг програми
+
+filename <- "~/data/parkinsons.data"dataset <- read.csv(filename, header=TRUE)str(dataset)dataset$status = as.factor(dataset$status)dataset <- subset(dataset, select = -c(1))table(dataset$status)library(caret)str(dataset)set.seed(123)index <- createDataPartition(dataset$status, p = 0.8,list = FALSE)dataset_train <- dataset[index, ]dataset_test  <- dataset[-index, ]library(rpart)# Побудова моделі дерева рішеньmodel <- rpart(status ~ ., data = dataset_train, method = "class")modelpredictions <- predict(model, dataset_test, type = "class")confusionMatrix(predictions, dataset_test$status)$overall["Accuracy"]table_mat <- table(dataset_test$status, predictions)table_mataccuracy_Test <- sum(diag(table_mat)) / sum(table_mat)accuracy_Testlibrary(C50)model <- C5.0(dataset_train[, -17], dataset_train$status)modelsummary(model)predictions <- predict(model, dataset_test[, -17], type = "class")confusionMatrix(predictions, dataset_test$status)$overall["Accuracy"]

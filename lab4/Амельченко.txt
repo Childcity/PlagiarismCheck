@@ -1,0 +1,184 @@
+КИЇВ - 2023
+Національний технічний університет України
+«Київський політехнічний інститут ім. Ігоря Сікорського»
+Кафедра цифрових технологій в енергетиці
+ЗВІТ
+про виконання лабораторної роботи №4
+з дисципліни «Вступ до інтелектуального аналізу даних»
+«Машини опорних векторів»
+Варіант №2
+Виконав: студент групи ТМ-02
+Амельченко А.В.
+Перевірив: доцент, к.ф.-м.н.
+Городецький М.В.
+__________________________Завдання
+1. Проаналізувати дані, що відповідають вашому варіанту, і визначити мету
+класифікації та ознаку, яка містить мітку класу.
+2. Імпортувати дані, що відповідають вашому варіанту, до системи R.
+3. Розбити набір даних на навчальний та тестовий.
+4. Провести класифікацію за допомогою машин опорних векторів,
+використовуючи бібліотеки caret, e1071 та kernlab.
+5. Оцінити та порівняти точність.
+6. Зробити висновки та написати звіт.
+Виконання роботи
+1) Проаналізувати дані, що відповідають вашому варіанту, і визначити мету
+класифікації та ознаку, яка містить мітку класу.
+Завдання за варіантом – Glass identification.
+http://archive.ics.uci.edu/ml/datasets/Glass+Identification
+Набір даних складається з одинадцяти атрибутів. Перший є порядковим
+номером, наступні дев’ять є хімічними властивостями скла. Останній атрибут –
+type of glass (тип скла) - є класовим, тобто ознакою з міткою класу. В
+таблиці ця ознака виражена певним номером, котрому відповідає
+характеристика скла.
+Мета класифікації – визначення типу скла за його хімічними властивостями.
+Детальна інформація про кожний з атрибутів:2) Імпортувати дані, що відповідають вашому варіанту, до системи R.
+Код:
+library(RCurl)
+urlfile <-'http://archive.ics.uci.edu/ml/machine-learningdatabases/glass/glass.data'
+downloaded <- getURL(urlfile, ssl.verifypeer=FALSE)
+connection <- textConnection(downloaded)
+dataset <- read.csv(connection, header=FALSE)
+colnames(dataset) <- c("id", "RI", "Na", "Mg", "AI", "Si", "K",
+"Ca","Ba","Fe","Type of glass")
+head(dataset, 15)
+Результат:
+3) Розбити набір даних на навчальний та тестовий.
+Для розбиття набору даних на навчальний та тестовий використаємо функцію
+Sample(). Розбивати будемо в пропорції 90 на 10, адже саме при такому
+розподілі було отримано максимальну точність класифікації. Попередньо також
+виключимо з набору перший стовпчик, в якому зберігається порядковий номер,
+адже він не несе корисної інформації для класифікації.
+Код:
+dataset1 <- dataset[,-1]
+set.seed(123)
+ran <- sample(1:nrow(dataset1), 0.9 * nrow(dataset1))
+traindata <- dataset1[ran, ]
+testdata <- dataset1[-ran, ]
+prop.table(table(traindata$`Type of glass`))
+prop.table(table(testdata$`Type of glass`))Результат:
+4) Провести класифікацію за допомогою машин опорних векторів,
+використовуючи бібліотеки caret, e1071 та kernlab.
+Почнемо з класифікації за допомогою бібліотеки caret.
+Для реалізації такого способу потрібно спочатку визначити контрольні
+параметри навчання моделі. В даному випадку ми використовуємо кросвалідацію з 10 блоками. Далі ми визначаємо метрику, яку будемо
+використовувати для оцінки результатів класифікації. Сама класифікація
+проходить за допомогою функції train(), де ми вказуємо нашу метрику,
+контрольні параметри, а також обираємо метод “svmLinear” для моделі SVM
+з лінійним ядром. Далі виконуємо прогнозування функцією predict() та
+обраховуємо отримані результати.
+Код:
+control <- trainControl(method = "cv", number = 10)
+metric <- "Accuracy"
+fit.svm <- train(`Type of glass`~., data = traindata, method =
+"svmLinear", metric = metric, trControl = control)
+caret_predict <-predict(fit.svm,testdata)
+confusion_matrix <- table(caret_predict, testdata$`Type of
+glass`)
+print(confusion_matrix)
+accuracy1 <- sum(diag(confusion_matrix))/sum(confusion_matrix)
+print(paste("accuracy of caret svm =",accuracy1*100,"%"))
+Результат:
+Точність – 77.27%.Класифікація за допомогою бібліотеки е1071
+За допомогою функції svm() створюється модель SVM, в параметрі kernel ми
+вказуємо лінійне ядро. Далі прогнозуємо класи використовуючи predict(),
+розраховуємо та виводимо результати.
+Код:
+library("e1071")
+svm_model <- svm(`Type of glass` ~ ., data=traindata,
+kernel="linear")
+pred = predict(svm_model,testdata)
+tab = table(Predicted=pred, Actual = testdata$`Type of glass`)
+print(tab)
+accuracy2 <- sum(diag(tab))/sum(tab)
+print(paste("accuracy of e1071 svm =",accuracy2*100,"%"))
+Результат:
+Точність становить 77.27%.
+Класифікація бібліотекою kernlab
+Для класифікації даною бібліотекою ми протестуємо два ядра – лінійне
+(kernel = “vanilladot”) та ядро радіально-базисної функції (kernel =
+“rbfdot”). Різниця між ними в тому, що лінійне ядро для границі
+розподілення класів використовує прямі лінії, а ядро радіально-базисної
+функції в свою чергу може створювати криві границі, що дозволяє моделі більш
+гнучко адаптуватись до складних нелінійних структур даних.
+Код для лінійного ядра:
+library(kernlab)
+classifier <- ksvm(`Type of glass` ~ ., data = traindata,
+kernel = "vanilladot")
+predictions <- predict(classifier, testdata)
+cm <- table(predictions, testdata$`Type of glass`)
+print(cm)
+accuracy3 <- sum(diag(cm))/sum(cm)
+print(paste("accuracy of ksvm with vanilla kernel
+=",accuracy3*100,"%"))Результат:
+Точність – 77.27%.
+Код для ядра радіально-базисної функції:
+classifier <- ksvm(`Type of glass` ~ ., data = traindata,
+kernel = "rbfdot")
+predictions <- predict(classifier, testdata)
+cm <- table(predictions, testdata$`Type of glass`)
+print(cm)
+accuracy4 <- sum(diag(cm))/sum(cm)
+print(paste("accuracy of ksvm with rbf kernel
+=",accuracy4*100,"%"))
+Результат:
+Точність дорівнює 81,818%.
+5) Оцінити точність.
+Для нашого набору даних бібліотеки caret та e1071, а також бібліотека
+kernlab при використанні лінійного ядра, показали однаковий результат –
+77.27%. При використанні ядра радіально-базисної функції в бібліотеці
+kernlab ми отримали дещо вищу точність – 81.818%. Тобто, наш набір даних є
+досить складним та нелійним.
+6) Зробити висновки
+Під час виконання лабораторної роботи ми використали навички з розбиття
+даних на навчальний та тестовий набори, зробили класифікацію за допомогою
+машин опорних векторів, використавши для цього три бібліотеки – caret,
+e1071 та kernlab, порівняли отримані результати.Лістинг
+library(RCurl)
+library(caret)
+urlfile <-'http://archive.ics.uci.edu/ml/machine-learningdatabases/glass/glass.data'
+downloaded <- getURL(urlfile, ssl.verifypeer=FALSE)
+connection <- textConnection(downloaded)
+dataset <- read.csv(connection, header=FALSE)
+head(dataset)
+colnames(dataset) <- c("id", "RI", "Na", "Mg", "AI", "Si", "K",
+"Ca","Ba","Fe","Type of glass")
+dataset1 <- dataset[,-1]
+set.seed(123)
+ran <- sample(1:nrow(dataset1), 0.9 * nrow(dataset1))
+traindata <- dataset1[ran, ]
+testdata <- dataset1[-ran, ]
+prop.table(table(traindata$`Type of glass`))
+prop.table(table(testdata$`Type of glass`))
+control <- trainControl(method = "cv", number = 10)
+metric <- "Accuracy"
+fit.svm <- train(`Type of glass`~., data = traindata, method =
+"svmLinear", metric = metric, trControl = control)
+caret_predict <-predict(fit.svm,testdata)
+confusion_matrix <- table(caret_predict, testdata$`Type of glass`)
+print(confusion_matrix)
+accuracy1 <- sum(diag(confusion_matrix))/sum(confusion_matrix)
+print(paste("accuracy of caret svm =",accuracy1*100,"%"))
+library("e1071")
+svm_model <- svm(`Type of glass` ~ ., data=traindata,
+kernel="linear")
+pred = predict(svm_model,testdata)
+tab = table(Predicted=pred, Actual = testdata$`Type of glass`)
+print(tab)
+accuracy2 <- sum(diag(tab))/sum(tab)
+print(paste("accuracy of e1071 svm =",accuracy2*100,"%"))
+library(kernlab)
+classifier <- ksvm(`Type of glass` ~ ., data = traindata,
+kernel = "vanilladot")
+predictions <- predict(classifier, testdata)
+cm <- table(predictions, testdata$`Type of glass`)print(cm)
+accuracy3 <- sum(diag(cm))/sum(cm)
+print(paste("accuracy of ksvm with vanilla kernel
+=",accuracy3*100,"%"))
+classifier <- ksvm(`Type of glass` ~ ., data = traindata,
+kernel = "rbfdot")
+predictions <- predict(classifier, testdata)
+cm <- table(predictions, testdata$`Type of glass`)
+print(cm)
+accuracy4 <- sum(diag(cm))/sum(cm)
+print(paste("accuracy of ksvm with rbf kernel
+=",accuracy4*100,"%"))

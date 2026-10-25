@@ -1,0 +1,33 @@
+Міністерство освіти і науки УкраїниНаціональний технічний університет України«Київський політехнічний інститут ім. І. Сікорського»Кафедра цифрових технологій в енергетиці ІАТЕЛабораторна робота №4із дисципліни: «Вступ до інтелектуального аналізу даних»Варіант №5Виконав:студент 3-го курсу, НН ІАТЕгрупи ТМ-01Галагуз С.П.Київ – 2023ЗвітІмпортувати дані
+
+
+Проаналізувати дані, що відповідають вашому варіанту, і визначити мету класифікації та ознаку, яка містить мітку класу.
+
+Згідно з інформацією на сайті, яка додається до датасету, таблиця містить такі стовпці:
+
+name - ASCII subject name and recording number
+MDVP:Fo(Hz) - Average vocal fundamental frequency
+MDVP:Fhi(Hz) - Maximum vocal fundamental frequency
+MDVP:Flo(Hz) - Minimum vocal fundamental frequency
+MDVP:Jitter(%),MDVP:Jitter(Abs),MDVP:RAP,MDVP:PPQ,Jitter:DDP - Several measures of variation in fundamental frequency
+MDVP:Shimmer,MDVP:Shimmer(dB),Shimmer:APQ3,Shimmer:APQ5,MDVP:APQ,Shimmer:DDA - Several measures of variation in amplitude
+NHR,HNR - Two measures of ratio of noise to tonal components in the voice
+status - Health status of the subject (one) - Parkinson's, (zero) - healthy
+RPDE,D2 - Two nonlinear dynamical complexity measures
+DFA - Signal fractal scaling exponent
+spread1,spread2,PPE - Three nonlinear measures of fundamental frequency variation
+
+Міткою класу є стовпець “status”, який показує, чи є людина здоровою (0), чи хворою (1). Вона є цільовою ознакою, яку б ми хотіли дізнатися, проаналізувавши всі атрибути.
+Розбити набір даних на навчальний та тестовий.
+
+
+
+Виконавши даний фрагмент коду, ми поділили набір даних на навчальний та тестовий. Перший буде використовуватись для тренування моделі, тоді як тестовий – для перевірки точності.
+Провести класифікацію за допомогою машин опорних векторів, використовуючи бібліотеки e1071 та kernlab. Оцінити точність.
+
+Класифікація з використанням бібліотеки e1071:
+
+Бібліотека e1071 використовує принципи машинного навчання для побудови моделей, зокрема методів опорних векторів (SVM), для класифікації та регресії.Отримана точність: 81.5789473684211 %. Це вказує на те, що модель добре працює на даному наборі даних і може правильно передбачати клас для близько 81% прикладів.Класифікація з використанням бібліотеки kernlab за допомогою ядра vanilladot:Показник точності є точно таким ж, як при використанні бібліотеки e1071. Даний показник, як було сказано, є досить хорошим.Класифікація з використанням бібліотеки caret:Показник точності є чудовим, оскільки він навіть вищий, ніж при використанні двох попередніх бібліотек.Висновок
+Під час виконання лабораторної роботи було проведено аналіз даних, а саме – класифікація даних за допомогою машин опорних векторів,використовуючи бібліотеки caret, e1071 та kernlab. Після обчислення точності виявилось, що вона є доволі високою у всіх трьох моделях.Лістинг програми
+
+filename <- "~/data/parkinsons.data"dataset <- read.csv(filename, header=TRUE)dataset$status = as.factor(dataset$status)dataset <- subset(dataset, select = -c(1))table(dataset$status)str(dataset)set.seed(123)library(caret)index <- createDataPartition(dataset$status, p = 0.8,list = FALSE)dataset_train <- dataset[index, ]dataset_test  <- dataset[-index, ]table(dataset_train$status)table(dataset_test$status)library("e1071")svm_model <- svm(status ~ ., data=dataset_train, kernel="linear") pred = predict(svm_model,dataset_test)tab = table(Predicted=pred, Actual = dataset_test$status)print(tab)accuracy2 <- sum(diag(tab))/sum(tab)print(paste("Accuracy of svm with e1071 =",accuracy2*100,"%"))library(kernlab)classifier <- ksvm(status ~ ., data = dataset_train, kernel = "vanilladot")predictions <- predict(classifier, dataset_test)confmatr <- table(predictions, dataset_test$status)print(confmatr)accuracy3 <- sum(diag(confmatr))/sum(confmatr)print(paste("Accuracy of svm with kernel =",accuracy3*100,"%"))library(caret)ctrl <- trainControl(method = "cv", number = 5)caretModel <- caret::train(status ~ ., data = dataset_train, method = "svmRadial",                  trControl = ctrl)pred = predict(caretModel,dataset_test)tab = table(Predicted=pred, Actual = dataset_test$status)print(tab)accuracy5 <- sum(diag(tab))/sum(tab)print(paste("Accuracy of svm with caret =",accuracy5*100,"%"))

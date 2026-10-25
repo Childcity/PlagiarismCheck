@@ -1,0 +1,31 @@
+Міністерство освіти і науки УкраїниНаціональний технічний університет України«Київський політехнічний інститут ім. І. Сікорського»Кафедра цифрових технологій в енергетиці ІАТЕЛабораторна робота №5із дисципліни: «Вступ до інтелектуального аналізу даних»Варіант №5Виконав:студент 3-го курсу, НН ІАТЕгрупи ТМ-01Галагуз С.П.Київ – 2023ЗвітІмпортувати дані
+
+
+Проаналізувати дані, що відповідають вашому варіанту, і визначити мету класифікації та ознаку, яка містить мітку класу.
+
+Згідно з інформацією на сайті, яка додається до датасету, таблиця містить такі стовпці:
+
+name - ASCII subject name and recording number
+MDVP:Fo(Hz) - Average vocal fundamental frequency
+MDVP:Fhi(Hz) - Maximum vocal fundamental frequency
+MDVP:Flo(Hz) - Minimum vocal fundamental frequency
+MDVP:Jitter(%),MDVP:Jitter(Abs),MDVP:RAP,MDVP:PPQ,Jitter:DDP - Several measures of variation in fundamental frequency
+MDVP:Shimmer,MDVP:Shimmer(dB),Shimmer:APQ3,Shimmer:APQ5,MDVP:APQ,Shimmer:DDA - Several measures of variation in amplitude
+NHR,HNR - Two measures of ratio of noise to tonal components in the voice
+status - Health status of the subject (one) - Parkinson's, (zero) - healthy
+RPDE,D2 - Two nonlinear dynamical complexity measures
+DFA - Signal fractal scaling exponent
+spread1,spread2,PPE - Three nonlinear measures of fundamental frequency variation
+
+Міткою класу є стовпець “status”, який показує, чи є людина здоровою (0), чи хворою (1). Вона є цільовою ознакою, яку б ми хотіли дізнатися, проаналізувавши всі атрибути.
+Розбити набір даних на навчальний та тестовий.
+
+
+
+Виконавши даний фрагмент коду, ми поділили набір даних на навчальний та тестовий. Перший буде використовуватись для тренування моделі, тоді як тестовий – для перевірки точності.
+Провести класифікацію за допомогою логістичної регресії. Оцінити та порівняти точність.
+
+Побудова моделі логістичної регресії дозволяє отримати функцію, яка може класифікувати нові спостереження на основі навчальних даних і незалежних змінних, що розглядаються. Це дає можливість прогнозувати ймовірність або клас належності до певної категорії, що допомагає вирішувати задачі класифікації. Отримана точність моделі – 77%, що є доволі непоганим показником.Побудувати ROC-криву та обчислити показник AUC.ROC-крива дозволяє визначити оптимальний поріг класифікації, забезпечуючи баланс між чутливістю та специфічністю моделі. Чим ближче крива до верхнього лівого кута графіку (ROC-кривої), тим краща модель класифікації. Ідеальний класифікатор буде мати ROC-криву, яка пройде через точку (0,1), що відповідає 100% чутливості і 0% специфічності.AUC (Area Under the Curve) ROC-кривої є показником якості моделі класифікації і вимірює площу, яка знаходиться під ROC-кривою. Вона використовується для оцінки ефективності моделі у розпізнаванні позитивних та негативних зразків. Значення AUC може бути від 0 до 1, де 0,5 відповідає випадковому класифікатору, а 1 відповідає ідеальному класифікатору, який розпізнає всі позитивні та негативні зразки без помилок. Чим більше значення AUC, тим краще модель класифікації. Для даної моделі значення AUC рівне 0.881Висновок
+Під час лабораторної роботи була проведена класифікація за допомогою логістичної регресії. Після аналізу результатів, було побудовано ROC-криву та визначено площу під цією кривою (AUC), яка становить 0.881. Отримане значення AUC вказує на добру ефективність моделі класифікації і це свідчить про те, що модель має високу здатність правильно класифікувати зразки.Лістинг програми
+
+library(ISLR)library(tibble)library(ggplot2)library(caret)as_tibble(Default)filename <- "~/data/parkinsons.data"dataset <- read.csv(filename, header=TRUE)dataset$status = as.factor(dataset$status)dataset <- subset(dataset, select = -c(1))table(dataset$status)str(dataset)set.seed(123)library(caret)index <- createDataPartition(dataset$status, p = 0.8,list = FALSE)dataset_train <- dataset[index, ]dataset_test  <- dataset[-index, ]model_glm <- glm(status ~ ., data = dataset_train, family = "binomial")predictions <- predict(model_glm, dataset_test, type = "response")predictedClasses <- ifelse(predict(model_glm, type = "link") > 0, 1, 0)# Оцінка точності моделіaccuracy <- (sum(predictedClasses == 1)) / (nrow(dataset_train))print(paste("Accuracy =", accuracy*100,"%"))library(pROC)roc_obj <- roc(dataset_test$status, predictions, print.auc = TRUE)plot(roc_obj ,main = "ROC curve", print.auc = TRUE,     xlab = "False Positive Rate", ylab = "True Positive Rate")*100,"%"))
